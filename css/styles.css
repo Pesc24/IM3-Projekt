@@ -1,0 +1,219 @@
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@100;300;400;500;700;800;900&display=swap');
+
+/* Alignment */
+.left {
+    text-align: left;
+    float: left;
+}
+
+.center {
+    text-align: center;
+    float: center !important;
+    margin: 0 auto;
+}
+
+.right {
+    text-align: right;
+    float: right;
+}
+
+/* Padding and Margin */
+.padding-5 {
+    padding: 5%;
+}
+
+.margin-15 {
+    margin: 15px;
+}
+
+.margin-5-top {
+    margin-top: 5%;
+}
+
+.margin-5-bottom {
+    margin-bottom: 5%;
+}
+
+/* Grids */
+.grid-2-columns, .grid-3-columns, .grid-4-columns {
+    display: grid;
+    gap: 20px;
+}
+
+.grid-2-columns {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3-columns {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4-columns {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.grid-item {
+    margin-bottom: 20px;
+}
+
+/* Body Styling for Neumorphism */
+body {
+    font-family: "M PLUS Rounded 1c", sans-serif;
+    font-weight: 100;
+    font-style: normal;
+    background: #e0e5ec;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Neumorphism Effect: Header */
+header {
+    margin: 20px;
+    padding: 20px;
+    background-color: #e0e5ec;
+    border-radius: 30px;
+    box-shadow: 9px 9px 16px #a3b1c6, -9px -9px 16px #ffffff;
+    color: #333;
+}
+
+header h1 {
+    margin: 0;
+}
+
+/* Neumorphic Input Field */
+#city-search {
+    width: 80%;
+    max-width: 400px;
+    padding: 15px;
+    border-radius: 30px;
+    margin: 20px auto;
+    background-color: #e0e5ec;
+    border: none;
+    box-shadow: inset 4px 4px 10px #c1c9d2, inset -4px -4px 10px #ffffff;
+    transition: box-shadow 0.3s;
+    display: block; /* Ensure the element is block-level */
+    margin-left: auto; /* Center horizontally */
+    margin-right: auto; /* Center horizontally */
+}
+
+#city-search:focus {
+    outline: none;
+    border: none !important;
+    box-shadow: 4px 4px 10px #c1c9d2, -4px -4px 10px #ffffff;
+}
+
+/* Neumorphic Map */
+#map {
+    margin: 30px !important;
+    height: 53.33vh;
+    width: calc(100% - 60px);
+    background-color: #e0e5ec;
+    border-radius: 20px;
+    box-shadow: 9px 9px 16px #a3b1c6, -9px -9px 16px #ffffff;
+}
+
+/* City Information Box */
+#city-info {
+    padding: 20px;
+    background-color: #e0e5ec;
+    border-radius: 20px;
+    box-shadow: 9px 9px 16px #a3b1c6, -9px -9px 16px #ffffff;
+    transition: 0.3s;
+}
+
+/* Neumorphic Hover Effect on Markers */
+.marker {
+    transition: transform 0.3s, box-shadow 0.3s;
+    border-radius: 50%;
+    background-color: #e0e5ec;
+    box-shadow: 4px 4px 10px #c1c9d2, -4px -4px 10px #ffffff;
+}
+
+.container {
+    width: 30%;
+        background-color: #e0e5ec;
+        color: #333;
+        text-align: left;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 9px 9px 16px #a3b1c6, -9px -9px 16px #ffffff;
+        margin: 20px;
+    }
+.legend-color {
+    margin-left: 15px;
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin-right: 5px; /* Adjust as needed for spacing */
+    vertical-align: middle; /* Aligns the span with the text */
+}
+
+.marker:hover {
+    transform: scale(1.2);
+    box-shadow: 4px 4px 10px #a3b1c6, -4px -4px 10px #ffffff;
+}
+
+/* Footer Styling */
+footer {
+    background-color: #e0e5ec;
+    color: #333;
+    text-align: left;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 9px 9px 16px #a3b1c6, -9px -9px 16px #ffffff;
+}
+
+footer p, footer a {
+    color: #333;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: #0277bd;
+}
+
+/* Team Member Card */
+.team-member {
+    text-align: center;
+    margin: 20px;
+}
+
+.team-member img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    box-shadow: 4px 4px 10px #c1c9d2, -4px -4px 10px #ffffff;
+    object-fit: cover;
+}
+
+@media (max-width: 768px) {
+    #city-search {
+        width: 90%;
+    }
+
+    #map {
+        height: 50vh;
+    }
+
+    #city-info {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    #city-search {
+        width: 95%;
+    }
+
+    #map {
+        height: 45vh;
+    }
+
+    #city-info {
+        padding: 10px;
+    }
+}
