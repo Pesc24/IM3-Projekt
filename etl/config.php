@@ -3,7 +3,7 @@
 // Datenbankverbindungsparameter
 $host = 'etl.benhan51.dbs.hostpoint.internal';
 $dbname = 'benhan51_etl';
-$username = 'benhan51_etlme';
+$username = 'benhan51_etl';
 $password = 'MMP2024_fhgr_etl_zuerich';
 
 // DSN (Datenquellenname) für PDO
