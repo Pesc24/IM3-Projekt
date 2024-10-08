@@ -15,7 +15,7 @@ $european_capitals = [
     "Kiev", "Lisbon", "Ljubljana", "London", "Luxembourg", "Madrid", "Monaco", "Moscow", 
     "Oslo", "Paris", "Podgorica", "Prague", "Pristina", "Reykjavik", "Riga", "Rome", 
     "San Marino", "Sarajevo", "Skopje", "Sofia", "Stockholm", "Tallinn", "Tirana", 
-    "Valletta", "Vienna", "Vilnius", "Warsaw", "Zagreb"
+    "Valletta", "Vienna", "Vilnius", "Warsaw", "Zagreb", "Minsk", "Vaduz", "Nicosia"
 ];
 
 // Function to fetch air quality data for a city
@@ -48,9 +48,9 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-// Prepare the SQL statement
-$sql = "INSERT INTO AirFit (city_name, latitude, longitude, aqi, pm25, pm10, o3, temperature, recorded_time) 
-        VALUES (:city_name, :latitude, :longitude, :aqi, :pm25, :pm10, :o3, :temperature, :recorded_time)";
+// Prepare the SQL statement to insert data
+$sql = "INSERT INTO AirFit (city_name, latitude, longitude, aqi, pm25, pm10, o3, temperature, recorded_time, recorded_date, pollution_avg) 
+        VALUES (:city_name, :latitude, :longitude, :aqi, :pm25, :pm10, :o3, :temperature, :recorded_time, :recorded_date, :pollution_avg)";
 $stmt = $pdo->prepare($sql);
 
 // Loop through each European capital city
@@ -65,20 +65,51 @@ foreach ($european_capitals as $city) {
     // Extract relevant data
     $city_data = $data['data'];
 
-    // Execute SQL statement with API data
+    // Extract air pollution values
+    $aqi = $city_data['aqi'];
+    $pm25 = $city_data['iaqi']['pm25']['v'] ?? null;
+    $pm10 = $city_data['iaqi']['pm10']['v'] ?? null;
+    $o3 = $city_data['iaqi']['o3']['v'] ?? null;
+
+    // Calculate pollution average by summing non-null values and dividing by their count
+    $sum = 0;
+    $count = 0;
+
+    if (!is_null($aqi)) {
+        $sum += $aqi;
+        $count++;
+    }
+    if (!is_null($pm25)) {
+        $sum += $pm25;
+        $count++;
+    }
+    if (!is_null($pm10)) {
+        $sum += $pm10;
+        $count++;
+    }
+    if (!is_null($o3)) {
+        $sum += $o3;
+        $count++;
+    }
+
+    // Calculate the pollution average
+    $pollution_avg = ($count > 0) ? $sum / $count : null;
+
+    // Execute SQL statement with the calculated average and other API data
     $stmt->execute([
-        ':city_name'    => $city_data['city']['name'],
+        ':city_name'    => $city, // Use the city name from the array
         ':latitude'     => $city_data['city']['geo'][0],
         ':longitude'    => $city_data['city']['geo'][1],
-        ':aqi'          => $city_data['aqi'],
-        ':pm25'         => $city_data['iaqi']['pm25']['v'] ?? null,
-        ':pm10'         => $city_data['iaqi']['pm10']['v'] ?? null,
-        ':o3'           => $city_data['iaqi']['o3']['v'] ?? null,
+        ':aqi'          => $aqi,
+        ':pm25'         => $pm25,
+        ':pm10'         => $pm10,
+        ':o3'           => $o3,
         ':temperature'  => $city_data['iaqi']['t']['v'] ?? null,
-        ':recorded_time' => $city_data['time']['iso']
+        ':recorded_time' => $city_data['time']['iso'],
+        ':recorded_date' => date('Y-m-d'), // Get the current date
+        ':pollution_avg' => $pollution_avg // Insert the calculated pollution average
     ]);
 
-    echo "Air quality data for {$city} successfully inserted into the database.\n";
+    echo "Air quality data for {$city} successfully inserted into the database with pollution average: " . round($pollution_avg, 2) . ".\n";
 }
-
 ?>

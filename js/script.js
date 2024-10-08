@@ -1,9 +1,7 @@
-mapboxgl.accessToken = 'pk.eyJ1Ijoic2NodWxwcm9qZWt0MjAyNCIsImEiOiJjbHdxZWI1dGowMWhsMmpzNmtuYmNhMGI0In0.u8jyMsLRqxqj78upp4Cjaw';
-const aqicnAPIKey = '655cf8594024de05dbc820f980aba37f23e6d059'; // Your AQICN API key
 let map;
 let markers = [];
 
-//List of European capitals with their coordinates
+// List of European capitals with their coordinates
 const europeanCapitals = [
     { name: "Berlin", lat: 52.5200, lon: 13.4050 },      // Germany
     { name: "Paris", lat: 48.8566, lon: 2.3522 },        // France
@@ -56,143 +54,91 @@ const europeanCapitals = [
 ];
 
 function initMap() {
-    map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: [10.4515, 51.1657], // Centered on Europe
-        zoom: 4
-    });
+    map = L.map('map').setView([51.1657, 10.4515], 4); // Centered on Europe
 
-    fetchAirQualityData();
-    setInterval(fetchAirQualityData, 7200000); // Update every 2 hours
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-    document.getElementById('city-search').addEventListener('change', function(event) {
-        const searchTerm = event.target.value.toLowerCase();
-        if (searchTerm.length > 2) {
-            fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?access_token=${mapboxgl.accessToken}&types=place&limit=1`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.features && data.features.length > 0) {
-                        const city = data.features[0];
-                        map.flyTo({
-                            center: city.center,
-                            zoom: 12,
-                            speed: 1.5, // Adjust the speed of the animation
-                            curve: 1 // Adjust the curve of the animation
-                        });
-
-                        // Optional: Update city info
-                        const cityInfo = document.getElementById('city-info');
-                        cityInfo.innerHTML = `<h3>${city.place_name}</h3>`;
-                    } else {
-                        alert('Keine Stadt gefunden.');
-                    }
-                })
-                .catch(error => console.error('Fehler beim Abrufen der Daten:', error));
-        }
+    // Add markers for European capitals
+    europeanCapitals.forEach(capital => {
+        const marker = L.circleMarker([capital.lat, capital.lon], {
+            radius: 5,
+            fillColor: "#ff7800",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        }).addTo(map).bindPopup(`<b>${capital.name}</b>`);
+        markers.push(marker);
     });
 }
-
-function fetchAirQualityData() {
-    fetch(`https://api.waqi.info/map/bounds/?latlng=35.0,-10.0,70.0,40.0&token=${aqicnAPIKey}`)
-        .then(response => response.json())
-        .then(data => {
-            // This will store the country we already added a station for
-            const countriesAdded = new Set();
-
-            const filteredStations = data.data.filter(station => {
-                return europeanCapitals.some(capital => {
-                    const distance = Math.sqrt(
-                        Math.pow(station.lat - capital.lat, 2) +
-                        Math.pow(station.lon - capital.lon, 2)
-                    );
-                    // Find the country that matches the capital and station
-                    if (distance < 0.5 && !countriesAdded.has(capital.name)) {
-                        countriesAdded.add(capital.name); // Mark this country as added
-                        return true; // Include this station
-                    }
-                    return false; // Skip this station
-                });
-            });
-
-            updateMap(filteredStations);
-        })
-        .catch(error => console.error('Fehler beim Abrufen der Daten:', error));
-}
-
-function updateMap(stations) {
-    markers.forEach(marker => marker.remove());
-    markers = [];
-
-    stations.forEach(station => {
-        if (station.lat && station.lon) {
-            const el = document.createElement('div');
-            el.className = 'marker';
-            el.style.backgroundColor = '#00e400';
-            el.style.width = '20px';
-            el.style.height = '20px';
-            el.style.borderRadius = '50%';
-
-            const marker = new mapboxgl.Marker(el)
-                .setLngLat([station.lon, station.lat])
-                .setPopup(new mapboxgl.Popup({ offset: 25 })
-                    .setHTML(`<div>
-                        <h2>${station.station.name}</h2>
-                        <p>Luftqualität: AQI ${station.aqi}</p>
-                        <canvas id="chart-${station.uid}" width="400" height="200"></canvas>
-                    </div>`))
-                .addTo(map);
-
-            marker.getElement().addEventListener('click', () => {
-                const chartId = `chart-${station.uid}`;
-                setTimeout(() => {
-                    const canvasElement = document.getElementById(chartId);
-                    if (canvasElement) {
-                        displayChart(chartId, station);
-                    } else {
-                        console.error(`Canvas with id ${chartId} not found`);
-                    }
-                }, 300);
-            });
-
-            markers.push(marker);
-        }
-    });
-}
-
-function displayChart(chartId, station) {
-    const ctx = document.getElementById(chartId).getContext('2d');
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
-                datasets: [{
-                    label: 'Luftqualität',
-                    data: Array(12).fill(station.aqi), // Example values, replace with real historical data
-                    backgroundColor: 'rgba(2, 119, 189, 0.2)',
-                    //borderColor: 'rgba(2, 119, 189, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    } else {
-        console.error(`Canvas with id ${chartId} not found`);
-    }
-}
-
-// Export functions for testing
-window.initMap = initMap;
-window.fetchAirQualityData = fetchAirQualityData;
-window.updateMap = updateMap;
-window.displayChart = displayChart;
 
 // Initialize the map
 document.addEventListener('DOMContentLoaded', initMap);
+
+
+
+
+
+
+
+
+
+//COMMUNICATION WITH SERVER AND PHP FILE ../ fetch_air_data.php
+
+ // JavaScript to handle city search and form submission
+// JavaScript to handle city search and form submission
+function searchCity() {
+    var city = document.getElementById('city-search').value;
+    if (city) {
+        fetchData(city);
+    } else {
+        alert('Please enter a city name');
+    }
+}
+
+// Fetch air quality and temperature data from the server
+function fetchData(city) {
+    // Make a POST request to fetch_air_data.php with the city name
+    fetch('fetch_air_data.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({ 'city_name': city })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            document.getElementById('air-quality-data').innerHTML = `<p>${data.error}</p>`;
+            document.getElementById('temperature-data').innerHTML = `<p>${data.error}</p>`;
+        } else {
+            // Update the air quality section
+            document.getElementById('air-quality-data').innerHTML = `
+                <p><strong>Air Quality Information:</strong></p>
+                <ul>
+                    <li>AQI: ${data.aqi}</li>
+                    <li>PM2.5: ${data.pm25} µg/m³</li>
+                    <li>PM10: ${data.pm10} µg/m³</li>
+                    <li>O3: ${data.o3} µg/m³</li>
+                </ul>
+                <p>The average pollution level: ${data.pollution_avg} µg/m³</p>
+            `;
+            
+            // Update the temperature section
+            document.getElementById('temperature-data').innerHTML = `
+                <p>The temperature in ${city} on ${data.recorded_time} was ${data.temperature}°C.</p>
+            `;
+        }
+    })
+    .catch(error => {
+        document.getElementById('air-quality-data').innerHTML = `<p>Error: ${error.message}</p>`;
+        document.getElementById('temperature-data').innerHTML = `<p>Error: ${error.message}</p>`;
+    });
+}
+
+// On page load, fetch data for the default city (Berlin)
+window.onload = function() {
+    fetchData('Berlin');
+};
