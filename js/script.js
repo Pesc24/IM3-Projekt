@@ -70,6 +70,14 @@ function initMap() {
             opacity: 1,
             fillOpacity: 0.8
         }).addTo(map).bindPopup(`<b>${capital.name}</b>`);
+
+        // Add click event to the marker
+        marker.on('click', function() {
+            // Fetch data for the clicked city
+            fetchData(capital.name);
+            document.getElementById('city-search').value = capital.name; // Update city name in search box
+        });
+
         markers.push(marker);
     });
 }
@@ -77,17 +85,6 @@ function initMap() {
 // Initialize the map
 document.addEventListener('DOMContentLoaded', initMap);
 
-
-
-
-
-
-
-
-
-//COMMUNICATION WITH SERVER AND PHP FILE ../ fetch_air_data.php
-
- // JavaScript to handle city search and form submission
 // JavaScript to handle city search and form submission
 function searchCity() {
     var city = document.getElementById('city-search').value;
@@ -97,6 +94,12 @@ function searchCity() {
         alert('Please enter a city name');
     }
 }
+
+
+
+
+
+
 
 // Fetch air quality and temperature data from the server
 function fetchData(city) {
@@ -113,28 +116,71 @@ function fetchData(city) {
         if (data.error) {
             document.getElementById('air-quality-data').innerHTML = `<p>${data.error}</p>`;
             document.getElementById('temperature-data').innerHTML = `<p>${data.error}</p>`;
+            document.getElementById('total-score-data').innerHTML = `<p>${data.error}</p>`;
         } else {
-            // Update the air quality section
-            document.getElementById('air-quality-data').innerHTML = `
-                <p><strong>Air Quality Information:</strong></p>
-                <ul>
-                    <li>AQI: ${data.aqi}</li>
-                    <li>PM2.5: ${data.pm25} µg/m³</li>
-                    <li>PM10: ${data.pm10} µg/m³</li>
-                    <li>O3: ${data.o3} µg/m³</li>
-                </ul>
-                <p>The average pollution level: ${data.pollution_avg} µg/m³</p>
-            `;
+            
+        // Determine the color based on AQI value
+ // Determine the color based on pollution_avg value
+        let pollutionColor;
+        if (data.pollution_avg >= 0 && data.pollution_avg <= 50) {
+            pollutionColor = 'green'; // SEHR GUT
+        } else if (data.pollution_avg >= 51 && data.pollution_avg <= 100) {
+            pollutionColor = 'yellow'; // GUT
+        } else if (data.pollution_avg >= 101 && data.pollution_avg <= 150) {
+            pollutionColor = 'orange'; // MITTELMÄSSIG
+        } else if (data.pollution_avg >= 151 && data.pollution_avg <= 200) {
+            pollutionColor = 'red'; // AUSREICHEND
+        } else if (data.pollution_avg >= 201 && data.pollution_avg <= 300) {
+            pollutionColor = 'purple'; // SCHLECHT
+        } else if (data.pollution_avg > 300) {
+            pollutionColor = 'darkred'; // SEHR SCHLECHT
+        }
+
+        // Update the air quality section with color and data
+        document.getElementById('air-quality-data').innerHTML = `
+            <p><strong>Air Quality Information:</strong></p>
+            <ul style="background-color: ${pollutionColor};">
+                <span>${data.pollution_avg} µg/m³</span><br>
+                (The average pollution level)<br><br>
+                <li>${city}</li>
+                <li>PM2.5: ${data.pm25} µg/m³</li>
+                <li>PM10: ${data.pm10} µg/m³</li>
+                <li>O3: ${data.o3} µg/m³</li>
+            </ul>
+        `;
             
             // Update the temperature section
+            let temperatureColor;
+            if (data.temperature >= 0 && data.temperature <= 15) {
+                temperatureColor = 'darkblue';
+                document.getElementById('temperature-data').style.color = 'white';
+            } else if (data.temperature >= 16 && data.temperature <= 19) {
+                temperatureColor = 'lightblue';
+            } else if (data.temperature >= 20 && data.temperature <= 24) {
+                temperatureColor = 'green';
+            } else if (data.temperature >= 25 && data.temperature <= 32) {
+                temperatureColor = 'orange';
+            } else if (data.temperature >= 33 && data.temperature <= 40) {
+                temperatureColor = 'red';
+            }
+
             document.getElementById('temperature-data').innerHTML = `
-                <p>The temperature in ${city} on ${data.recorded_time} was ${data.temperature}°C.</p>
+                <span style="background: ${temperatureColor}; padding: 10px; border-radius: 20px;">
+                    ${data.temperature}°C
+                </span>
+                <p>${city}, ${data.recorded_time}</p>
+            `;
+
+            // Update the total score section
+            document.getElementById('total-score-data').innerHTML = `
+                <p>Total Score for ${city}: ${data.tot_score}</p>
             `;
         }
     })
     .catch(error => {
         document.getElementById('air-quality-data').innerHTML = `<p>Error: ${error.message}</p>`;
         document.getElementById('temperature-data').innerHTML = `<p>Error: ${error.message}</p>`;
+        document.getElementById('total-score-data').innerHTML = `<p>Error: ${error.message}</p>`;
     });
 }
 
@@ -142,3 +188,103 @@ function fetchData(city) {
 window.onload = function() {
     fetchData('Berlin');
 };
+
+
+
+
+
+
+
+
+//CHART
+
+
+/*function fetchLast24HoursData(city) {
+    fetch('fetch_last_24_hours_data.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({ 'city_name': city })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);  // Debug to check the data structure
+
+        if (data.error) {
+            console.error("Error fetching data: ", data.error);
+        } else {
+            // Extract data
+            const labels = data.map(entry => entry.recorded_time);
+            const temperatures = data.map(entry => entry.temperature);
+            const pollution = data.map(entry => entry.pollution_avg);
+            const aqi = data.map(entry => entry.aqi);
+
+            // Get the canvas context
+            const ctx = document.getElementById('temperaturePollutionChart').getContext('2d');
+
+            // Create the chart
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels, // Time labels
+                    datasets: [
+                        {
+                            label: 'Temperature (°C)',
+                            data: temperatures,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 2,
+                            fill: false
+                        },
+                        {
+                            label: 'Pollution (µg/m³)',
+                            data: pollution,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                            fill: false
+                        },
+                        {
+                            label: 'AQI',
+                            data: aqi,  // Optional: include AQI if needed
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 2,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'hour',
+                                displayFormats: {
+                                    hour: 'HH:mm'  // Hourly format
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Time (Last 24 Hours)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Value'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    })
+    .catch(error => {
+        console.error("Error: ", error);
+    });
+}
+
+// Call the function on page load or after city search
+window.onload = function() {
+    fetchLast24HoursData('Berlin');  // Default city on load
+}; */

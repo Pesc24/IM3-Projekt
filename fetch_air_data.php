@@ -18,7 +18,7 @@ try {
     $pdo = new PDO($dsn, $username, $password, $options);
 
     // SQL query to fetch the latest data (including AQI, PM2.5, PM10, O3) for the specified city from the 'AirFit' table
-    $sql = "SELECT temperature, aqi, pm25, pm10, o3, pollution_avg, recorded_time FROM `AirFit` 
+    $sql = "SELECT temperature, aqi, pm25, pm10, o3, pollution_avg, recorded_time, tot_score FROM `AirFit` 
             WHERE city_name = :city_name 
             ORDER BY recorded_time DESC LIMIT 1;";
 

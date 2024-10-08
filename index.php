@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0"></script>
 </head>
 <body>
     <header>
@@ -29,6 +30,17 @@
         <div class="container">
             <h3>Luftqualitätsskala</h3>
             <!--THis is data from fetch_air_data.php-->
+            <div id="total-score-data">
+                <p>Loading data...</p>
+            </div>
+            <div id="legend">
+                <p><span class="legend-color" style="background-color: #00e400;"></span> <strong>SEHR GUT (8-10)</strong></p>
+                <p><span class="legend-color" style="background-color: #ff7e00;"></span> <strong>MITTELMÄSSIG (4-7)</strong></p>
+                <p><span class="legend-color" style="background-color: #99004c;"></span> <strong>SCHLECHT (1-3)</strong></p>
+
+            </div>
+            </div>
+            <div class="container">
             <div id="air-quality-data">
                 <p>Loading data...</p>
             </div>
@@ -56,6 +68,14 @@
                 <p><span class="legend-color" style="background-color: #99004c;"></span> <strong>Zu Heiss(32-40)</strong></p>
             </div>
             </div>
+
+            <div id="chart-container" style="width: 65%;">
+        <canvas id="temperaturePollutionChart" width="400" height="200"></canvas>
+    </div>
+    <div id="chart-container" class="container" style="width: 65%;">
+        chart
+    <canvas id="temperaturePollutionChart" width="400" height="200"></canvas>
+</div>
     </main>
     <footer class="margin-15">
         <p><a href="mailto:contact@airquality.ch">Kontakt</a></p>
@@ -63,5 +83,9 @@
     </footer>
 
 <script src="js/script.js"></script>
+
+
 </body>
 </html>
+
+
