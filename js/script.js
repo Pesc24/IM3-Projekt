@@ -1,7 +1,6 @@
 let map;
 let markers = [];
 
-
 function initMap() {
     map = L.map('map').setView([51.1657, 10.4515], 4); // Centered on Europe
 
