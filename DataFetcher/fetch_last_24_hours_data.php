@@ -2,7 +2,7 @@
 session_start(); // Start the session
 
 // Include the database connection
-include_once 'etl/config.php';
+include_once '../etl/config.php';
 
 // Handle form submission using POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['city_name'])) {
@@ -11,16 +11,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['city_name'])) {
 }
 
 // Set the default city name to 'Berlin' or the one stored in the session
-$city_name = isset($_SESSION['city_name']) ? $_SESSION['city_name'] : 'Berlin';
+$city_name = isset($_SESSION['city_name']) ? $_SESSION['city_name'] : 'Paris';
 
 try {
     // Create a new PDO instance (connect to the database)
     $pdo = new PDO($dsn, $username, $password, $options);
 
-    // SQL query to fetch the latest data (including AQI, PM2.5, PM10, O3) for the specified city from the 'AirFit' table
-    $sql = "SELECT temperature, aqi, pm25, pm10, o3, pollution_avg, recorded_time, tot_score FROM `AirFit` 
+    // SQL query to fetch the temperature, pollution_avg, recorded_time, and tot_score for the last 24 hours
+    $sql = "SELECT temperature, pollution_avg, recorded_time, tot_score 
+            FROM `AirFit` 
             WHERE city_name = :city_name 
-            ORDER BY recorded_time DESC LIMIT 1;";
+            ORDER BY recorded_time DESC;";
 
     // Prepare the SQL statement
     $stmt = $pdo->prepare($sql);
@@ -28,14 +29,14 @@ try {
     // Execute the statement with the city name
     $stmt->execute(['city_name' => $city_name]);
 
-    // Fetch the result
-    $result = $stmt->fetch();
+    // Fetch all results
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Return data as JSON
     if ($result) {
         echo json_encode($result);
     } else {
-        echo json_encode(['error' => 'No air quality data found for ' . $city_name]);
+        echo json_encode(['error' => 'No air quality data found for the last 24 hours in ' . $city_name]);
     }
 
 } catch (PDOException $e) {

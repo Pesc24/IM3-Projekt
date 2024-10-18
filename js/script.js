@@ -1,108 +1,68 @@
 let map;
 let markers = [];
 
-function initMap() {
-    map = L.map('map').setView([51.1657, 10.4515], 4); // Centered on Europe
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    // Add markers for European capitals
-    europeanCapitals.forEach(capital => {
-        const marker = L.circleMarker([capital.lat, capital.lon], {
-            radius: 5,
-            fillColor: "#ff7800",
-            color: "#000",
-            weight: 1,
-            opacity: 1,
-            fillOpacity: 0.8
-        }).addTo(map).bindPopup(`<b>${capital.name}</b>`);
-
-        // Add click event to the marker
-        marker.on('click', function () {
-            // Fetch data for the clicked city
-            fetchData(capital.name);
-            document.getElementById('city-search').value = capital.name; // Update city name in search box
-        });
-
-        markers.push(marker);
-    });
-}
-
-// Initialize the map
-document.addEventListener('DOMContentLoaded', initMap);
-
-// JavaScript to handle city search and form submission
-function searchCity() {
-    var city = document.getElementById('city-search').value;
-    if (city) {
-        fetchData(city);
-    } else {
-        alert('Please enter a city name');
+// TOTAL SCORE COLOR TO BE USED ON THE MAP ASWELL
+function getScoreColor(roundedScore) {
+    let scoreColor;
+    if (roundedScore >= 8 && roundedScore <= 10) {
+        scoreColor = 'lightgreen';
+    } else if (roundedScore >= 4 && roundedScore <= 7) {
+        scoreColor = 'orange';
+    } else if (roundedScore >= 1 && roundedScore <= 3) {
+        scoreColor = 'red';
     }
-}
-
-// Add event listener for the Enter key on the city search input
-document.getElementById('city-search').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        searchCity();
+    else {
+        scoreColor = 'grey';
     }
-});
+    return scoreColor;
+}
 
 // Fetch air quality and temperature data from the server
 function fetchData(city) {
-    // Make a POST request to fetch_air_data.php with the city name
-    fetch('fetch_air_data.php', {
+    fetch('DataFetcher/fetch_air_data.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({ 'city_name': city })
-    }) //POLLUTION
+    })
         .then(response => response.json())
+        //TOTAL SCORE
         .then(data => {
             if (data.error) {
                 document.getElementById('air-quality-data').innerHTML = `<p>${data.error}</p>`;
                 document.getElementById('temperature-data').innerHTML = `<p>${data.error}</p>`;
                 document.getElementById('total-score-data').innerHTML = `<p>${data.error}</p>`;
             } else {
-
-                // Determine the color based on AQI value
-                // Determine the color based on pollution_avg value
                 let pollutionColor;
                 if (data.pollution_avg >= 0 && data.pollution_avg <= 50) {
-                    pollutionColor = 'lightgreen'; // SEHR GUT
+                    pollutionColor = 'lightgreen';
                 } else if (data.pollution_avg >= 51 && data.pollution_avg <= 100) {
-                    pollutionColor = 'yellow'; // GUT
+                    pollutionColor = 'yellow';
                 } else if (data.pollution_avg >= 101 && data.pollution_avg <= 150) {
-                    pollutionColor = 'orange'; // MITTELMÄSSIG
+                    pollutionColor = 'orange';
                 } else if (data.pollution_avg >= 151 && data.pollution_avg <= 200) {
-                    pollutionColor = 'red'; // AUSREICHEND
+                    pollutionColor = 'red';
                 } else if (data.pollution_avg >= 201 && data.pollution_avg <= 300) {
-                    pollutionColor = 'purple'; // SCHLECHT
+                    pollutionColor = 'purple';
                 } else if (data.pollution_avg > 300) {
-                    pollutionColor = 'darkred'; // SEHR SCHLECHT
+                    pollutionColor = 'darkred';
                 }
 
-                // Update the air quality section with color and data
                 document.getElementById('air-quality-data').innerHTML = `
-
-            ${city}<br />
-                <p style="background-color: ${pollutionColor};" class="infobox">${data.pollution_avg} µg/m³</p><br>
-               
-                <div class="container">
-                <h4>Detail:</h4>
-                 <ul>
-                    <li>PM2.5: ${data.pm25} µg/m³</li>
-                    <li>PM10: ${data.pm10} µg/m³</li>
-                    <li>O3: ${data.o3} µg/m³</li>
-                 </ul>
+                <b>
+                    <p style="background-color: ${pollutionColor};" class="infobox">${data.pollution_avg} µg/m³</p>
+                </b><br>
+                <div class="container" id="detail-container">
+                    <h4>Detail:</h4>
+                    <ul>
+                        <li>PM2.5: ${data.pm25} µg/m³</li>
+                        <li>PM10: ${data.pm10} µg/m³</li>
+                        <li>O3: ${data.o3} µg/m³</li>
+                    </ul>
                 </div>
-   
-        `;
+            `;
 
-                // temperature
                 let temperatureColor;
                 if (data.temperature >= 0 && data.temperature <= 15) {
                     temperatureColor = 'darkblue';
@@ -110,41 +70,31 @@ function fetchData(city) {
                 } else if (data.temperature >= 16 && data.temperature <= 19) {
                     temperatureColor = 'lightblue';
                 } else if (data.temperature >= 20 && data.temperature <= 24) {
-                    temperatureColor = 'green';
+                    temperatureColor = 'lightgreen';
                 } else if (data.temperature >= 25 && data.temperature <= 32) {
                     temperatureColor = 'orange';
                 } else if (data.temperature >= 33 && data.temperature <= 40) {
                     temperatureColor = 'red';
+                    document.getElementById('temperature-data').style.color = 'white';
                 }
 
                 document.getElementById('temperature-data').innerHTML = `
-                 <p>${city}</p><br />
                 <span style="background: ${temperatureColor};" class="infobox">
                     ${data.temperature}°C
                 </span>
- 
             `;
 
-                // Round the total score
                 let roundedScore = Math.round(data.tot_score);
-
-                // total score 
-                let scoreColor;
-                if (roundedScore >= 8 && roundedScore <= 10) {
-                    scoreColor = 'lightgreen';
-                } else if (roundedScore >= 4 && roundedScore <= 7) {
-                    scoreColor = 'orange';
-                } else if (roundedScore >= 1 && roundedScore <= 3) {
-                    scoreColor = 'red';
-                }
-                
+                let scoreColor = getScoreColor(roundedScore);
 
                 document.getElementById('total-score-data').innerHTML = `
-                 ${city}:
-                <span style="background-color: ${scoreColor};" class="infobox"> ${roundedScore}</span>
+                <span style="background-color: ${scoreColor};" class="infobox"> <b>${roundedScore}</b></span>
             `;
+                //Upper case the city name and display it
+                document.getElementById('currentCity').innerHTML = `<h2>CURRENT CITY: ${city.toUpperCase()}</h2>`;
 
-            document.getElementById('currentCity').innerHTML = `<h2>Current City: ${city}</h2>`;
+                // Set the marker on the map
+                setCityMarker(city, data.lat, data.lon, roundedScore, scoreColor);
             }
 
             // Fetch last 24 hours data for the city
@@ -157,59 +107,78 @@ function fetchData(city) {
         });
 }
 
-// On page load, fetch data for the default city (Berlin)
-window.onload = function () {
-    fetchData('Berlin');
-};
+// Set a marker on the map for the searched city
+function setCityMarker(city, lat, lon, score, scoreColor) {
+    // Use fallback coordinates if the API didn't return them
+    if (!lat || !lon) {
+        const cityData = europeanCapitals.find(c => c.name.toLowerCase() === city.toLowerCase());
+        if (cityData) {
+            lat = cityData.lat;
+            lon = cityData.lon;
+            console.log(`Using predefined coordinates for ${city}: ${lat}, ${lon}`);
+        } else {
+            alert(`Coordinates not found for ${city}, and no fallback available.`);
+            return;
+        }
+    }
 
-// CHART
+    const marker = L.circleMarker([lat, lon], {
+        radius: 5,
+        fillColor: scoreColor,
+        color: "#000",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+    }).addTo(map).bindPopup(`<b>${city}</b> (Score: ${score})`);
 
+    marker.openPopup();  // Automatically open the popup for the searched city
+
+    // Center the map on the searched city
+    map.setView([lat, lon]);
+
+    // Add the marker to the markers array if needed
+    markers.push(marker);
+}
+
+// Fetch last 24 hours data for chart
 function fetchLast24HoursData(city) {
-    fetch('fetch_last_24_hours_data.php', {
+    fetch('DataFetcher/fetch_last_24_hours_data.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({ 'city_name': city })
     })
-    .then(response => response.json())
-    .then(data => {
-        console.log(data);  // Debugging: log the data structure
-
-        if (data.error) {
-            console.error("Error fetching data: ", data.error);
-        } else {
-            // Check if the data array is empty or invalid
+        .then(response => response.json())
+        .then(data => {
             if (!Array.isArray(data) || data.length === 0) {
                 console.error("No data available for the last 24 hours.");
                 return;
             }
 
-            // Prepare data for the chart
-            const labels = data.map(entry => entry.recorded_time); // X-axis: Timestamps
-            const totalScores = data.map(entry => entry.tot_score); // Y-axis: Total Scores
+            const labels = data.map(entry => entry.recorded_time);
+            const totalScores = data.map(entry => entry.tot_score);
 
-            // Clear previous content and charts
+            // Ensure the container is cleared before adding the chart
             const container = document.getElementById('chart-container');
-            container.innerHTML = ''; // Clear any existing content
-            
-            // Create a canvas for the chart
+            container.innerHTML = '';  // Clear any previous chart
+
+            // Create a new canvas for the chart
             const canvas = document.createElement('canvas');
             canvas.id = 'totalScoreChart';
             container.appendChild(canvas);
 
-            // Create the chart
-            const ctx = document.getElementById('totalScoreChart').getContext('2d');
+            const ctx = canvas.getContext('2d');
             new Chart(ctx, {
-                type: 'line',  // Create a line chart
+                type: 'line',
                 data: {
-                    labels: labels,  // Timestamps
+                    labels: labels,
                     datasets: [{
                         label: 'Total Score',
-                        data: totalScores,  // Total scores for each timestamp
-                        borderColor: 'rgba(75, 192, 192, 1)',  // Line color
+                        data: totalScores,
+                        borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 2,
-                        fill: false  // Do not fill under the line
+                        fill: false
                     }]
                 },
                 options: {
@@ -225,16 +194,117 @@ function fetchLast24HoursData(city) {
                                 display: true,
                                 text: 'Total Score (1 - 10)'
                             },
-                            min: 1,  // Minimum value for Y axis
-                            max: 10  // Maximum value for Y axis
+                            min: 1,
+                            max: 10
                         }
                     }
                 }
             });
+        })
+        .catch(error => {
+            console.error("Error: ", error);
+            alert("An error occurred while fetching the last 24 hours data.");
+        });
+}
+
+// On page load, fetch data for the default city (Berlin)
+window.onload = function () {
+    fetchData('Berlin');
+};
+
+// Add event listener for the Enter key on the city search input
+document.getElementById('city-search').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        searchCity();
+    }
+});
+
+document.getElementById('search').addEventListener('click', function () {
+    searchCity();
+});
+
+// City search function
+function searchCity() {
+    var city = document.getElementById('city-search').value;
+    if (city) {
+        fetchData(city);
+    } else {
+        alert('Please enter a city name');
+    }
+}
+
+// Check if the entered city is a capital city
+function isCapitalCity(city) {
+    const capitalCities = europeanCapitals.map(capital => capital.name.toLowerCase());
+    return capitalCities.includes(city.toLowerCase());
+}
+
+// Modify the searchCity function to show a popup if the entered city is not a capital city
+function searchCity() {
+    var city = document.getElementById('city-search').value;
+    if (city) {
+        if (isCapitalCity(city)) {
+            fetchData(city);
+        } else {
+            alert('No data found. Please make sure that you have entered a capital city');
         }
-    })
-    .catch(error => {
-        console.error("Error: ", error);
-        alert("An error occurred while fetching the last 24 hours data.");
+    } else {
+        alert('Please enter a city name');
+    }
+}
+
+// Initialize the map
+function initMap() {
+    // Initialize the map with zooming disabled but dragging enabled
+    map = L.map('map', {
+        center: [51.1657, 10.4515], // Centered on Europe
+        zoom: 4,
+        zoomControl: false, // Disable zoom control buttons
+        scrollWheelZoom: false, // Disable scroll wheel zoom
+        doubleClickZoom: false, // Disable double-click zoom
+        boxZoom: false, // Disable box zoom
+        dragging: true // Enable map dragging
+    });
+
+    // Add CartoDB Positron tile layer for better country visibility
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://carto.com/attributions">CartoDB</a> contributors'
+    }).addTo(map);
+
+    // For each capital, fetch the score from the server
+    europeanCapitals.forEach(capital => {
+        fetch('DataFetcher/fetch_air_data.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({ 'city_name': capital.name })
+        })
+            .then(response => response.json())
+            .then(data => {
+                let roundedScore = Math.round(data.tot_score);
+                let scoreColor = getScoreColor(roundedScore);
+
+                const marker = L.circleMarker([capital.lat, capital.lon], {
+                    radius: 5,
+                    fillColor: scoreColor,
+                    color: "#000",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map).bindPopup(`<b>${capital.name}</b> (Score: ${roundedScore})`);
+
+                marker.on('click', function () {
+                    fetchData(capital.name); // Fetch data when marker is clicked
+                    document.getElementById('city-search').value = capital.name;
+                });
+
+                markers.push(marker);
+            })
+            .catch(error => {
+                console.error(`Error fetching data for ${capital.name}:`, error);
+            });
     });
 }
+
+document.addEventListener('DOMContentLoaded', initMap);

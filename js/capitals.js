@@ -30,10 +30,7 @@ const europeanCapitals = [
     { name: "Vilnius", lat: 54.6872, lon: 25.2797 },     // Lithuania
     { name: "Valletta", lat: 35.8997, lon: 14.5146 },    // Malta
     { name: "Nicosia", lat: 35.1856, lon: 33.3823 },     // Cyprus
-    { name: "Andorra la Vella", lat: 42.5063, lon: 1.5218 }, // Andorra
     { name: "Monaco", lat: 43.7384, lon: 7.4246 },       // Monaco
-    { name: "San Marino", lat: 43.9333, lon: 12.4500 },  // San Marino
-    { name: "Vaduz", lat: 47.1416, lon: 9.5215 },        // Liechtenstein
     { name: "Minsk", lat: 53.9006, lon: 27.5590 },       // Belarus
     { name: "Sarajevo", lat: 43.8563, lon: 18.4131 },    // Bosnia and Herzegovina
     { name: "Skopje", lat: 41.9981, lon: 21.4254 },      // North Macedonia
@@ -46,5 +43,4 @@ const europeanCapitals = [
     { name: "Tbilisi", lat: 41.7151, lon: 44.8271 },     // Georgia
     { name: "Yerevan", lat: 40.1792, lon: 44.4991 },     // Armenia
     { name: "Baku", lat: 40.4093, lon: 49.8671 },        // Azerbaijan
-    { name: "Vatican City", lat: 41.9029, lon: 12.4534 } // Vatican City
 ];
