@@ -143,6 +143,14 @@ input[type="text"]:focus {
     gap: 20px;
 }
 
+.grid-2-columns-40-60 {
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: 40vw, 60vw;
+    gap: 20px;
+}
+
+
 .grid-2-rows {
     display: grid;
     grid-template-rows: repeat(2, 1fr);

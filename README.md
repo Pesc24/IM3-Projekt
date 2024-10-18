@@ -1,7 +1,14 @@
 # Luftqualität in der Schweiz
 
 ## Kurzbeschreibung des Projekts
-Wir haben es zu unserer Aufgabe gemacht, euch die beste Luft der Schweiz zugänglich zu machen. Auf der Seite hat man die Möglichkeit, im Suchfeld nach einer Stadt in der Schweiz zu suchen und deren Luftqualität zu sehen. Die Daten umfassen den aktuellen Stand und den Verlauf der Luftqualität. Auch kann man nach der aktuell besten und/oder schlechtesten Luftqualität suchen. Zusätzlich haben wir eine Legende und das gewünschte Team hinzugefügt.
+https://admin.hostpoint.ch/phpmyadmin2/index.php?route=/sql&db=benhan51_etl&table=AirFit&pos=0&server=1806
+
+https://etl.mmp.li/airfit/
+
+https://crontool-frontend.vercel.app/
+
+chart.js
+
 
 ## Benutzte Ressourcen
 - GitHub
